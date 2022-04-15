@@ -76,13 +76,31 @@ class Model {
         $conn = self::$conn;
         $table = self::$table;
 
-        $column = implode(", ", array_keys($column_add));
-        $value = implode(", ", array_map( function($column) {
-            return "'" . $column . "'";
-        }, $column_add));
+        
+        if (count($column_add) == count($column_add, COUNT_RECURSIVE)) {
+            $column = implode(", ", array_keys($column_add));
 
-        $sql = "INSERT INTO " . $table . " ( " . $column . " ) VALUES ( " . $value . " )";
+            $value = implode(", ", array_map( function($column) {
+                return "'" . $column . "'";
+            }, $column_add));
 
+            $value = " ( " . $value . " )";
+        }  else {
+            $column = implode(", ", array_keys($column_add[0]));
+
+            $value = array_map( function($row) {
+                $value_string = implode(", ", array_map( function($column) {
+                    return "'" . $column . "'";
+                }, $row));
+
+                return " ( " . $value_string . " )";
+            }, $column_add);
+
+            $value = implode(", ", $value);
+        }
+
+        $sql = "INSERT INTO " . $table . " ( " . $column . " ) VALUES" . $value;
+        // var_dump($sql);
         if ($conn->query($sql) === TRUE) {
             echo "New record created successfully";
         } else {
