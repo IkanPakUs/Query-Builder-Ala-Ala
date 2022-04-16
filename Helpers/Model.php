@@ -53,7 +53,7 @@ class Model {
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
-            return $result;
+            return $result->fetch_all(MYSQLI_ASSOC);
         }
     }
 
