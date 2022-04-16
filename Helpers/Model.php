@@ -2,22 +2,11 @@
 
 class Model {
 
-    public static $table, $select_column, $where_clause = [], $conn;
+    public static $table, $select_column, $where_clause = [], $conn, $dbname;
 
     public static function table($table) {
         self::$table = $table;
-
-        $servername = "db";
-        $username = "root";
-        $password = "pemweb";
-        $dbname = "WebApp";
-
-        $conn = new mysqli($servername, $username, $password, $dbname);
-        self::$conn = $conn;
-
-        if ($conn->connect_error) {
-            die("Connection failed: " . $conn->connect_error);
-        } 
+        self::dbConnect();
 
         return new static();
     }
@@ -53,6 +42,8 @@ class Model {
         $select_column = isset(self::$select_column) ? implode(", ", self::$select_column) : "*";
         $where_clause = self::$where_clause;
 
+        self::queryValidator();
+
         $sql = "SELECT " . $select_column . " FROM " . $table;
 
         if (count($where_clause) > 0) {
@@ -62,20 +53,15 @@ class Model {
         $result = $conn->query($sql);
 
         if ($result->num_rows > 0) {
-        // output data of each row
-            while($row = $result->fetch_assoc()) {
-                var_dump($row);
-            }
-        } else {
-            echo "0 results";
+            return $result;
         }
-        $conn->close();
     }
 
     public static function insert($column_add) {
         $conn = self::$conn;
         $table = self::$table;
 
+        self::queryValidator();
         
         if (count($column_add) == count($column_add, COUNT_RECURSIVE)) {
             $column = implode(", ", array_keys($column_add));
@@ -100,10 +86,8 @@ class Model {
         }
 
         $sql = "INSERT INTO " . $table . " ( " . $column . " ) VALUES" . $value;
-        // var_dump($sql);
-        if ($conn->query($sql) === TRUE) {
-            echo "New record created successfully";
-        } else {
+
+        if ($conn->query($sql) !== TRUE) {
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
     }
@@ -111,6 +95,8 @@ class Model {
     public static function update($column_update) {
         $conn = self::$conn;
         $table = self::$table;
+
+        self::queryValidator();
 
         $columns = array_map( function($key, $value)  {
             return $key .= " = '" . $value . "'";
@@ -122,9 +108,7 @@ class Model {
 
         $sql = "UPDATE " . $table . " SET " . $columns . $where_clause;
 
-        if ($conn->query($sql) === TRUE) {
-            echo "Record updated successfully";
-        } else {
+        if ($conn->query($sql) !== TRUE) {
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
     }
@@ -134,11 +118,11 @@ class Model {
         $table = self::$table;
         $where_clause = self::setupWhereClause();
 
+        self::queryValidator();
+
         $sql = "DELETE FROM " . $table . $where_clause;
 
-        if ($conn->query($sql) === TRUE) {
-            echo "Record deleted successfully";
-        } else {
+        if ($conn->query($sql) !== TRUE) {
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
     }
@@ -164,6 +148,57 @@ class Model {
         $sql = " WHERE " . implode(" ", $where_clause);
 
         return $sql;
+    }
+
+    protected static function queryValidator() {        
+        $tables = self::getAllTable();
+
+        try {
+            $tables_arr = array_map( function ($table) {
+                return $table[0]; 
+            }, array_values($tables));
+    
+            if (!isset(self::$table) || !in_array(self::$table, $tables_arr)) {
+                echo "No table selected <br>";
+            }
+            
+        } catch (\Throwable $th) {
+            echo $th;
+        }
+
+    }
+
+    protected static function getAllTable() {
+        $conn = self::$conn;
+        $dbname = self::$dbname;
+
+        $sql = "SHOW TABLES FROM " . $dbname;
+        if (!isset($conn)) {
+            self::dbConnect();
+        }
+
+        $tables = $conn->query($sql);
+
+        if ($tables->num_rows > 0) {
+            return $tables->fetch_all();
+        } else {
+            throw new Exception("Table is not available in this database");
+        }
+    }
+
+    protected static function dbConnect() {
+        $servername = "db";
+        $username = "root";
+        $password = "pemweb";
+        self::$dbname = $dbname = "WebApp";
+
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        self::$conn = $conn;
+
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+
     }
 
 }
