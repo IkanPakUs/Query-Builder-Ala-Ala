@@ -1,14 +1,18 @@
 <?php
 require_once 'Helpers/Model.php';
 
-// Model::table('Mahasiswa')->select('nama')->where('nama', '=', 'komang')->orWhere('nama', '=', "maye")->get();
-// Model::table('Mahasiswa')->select('nama', 'nim')->get();
-// Model::table('Mahasiswa')->where('nama', '=', 'komang')->where('nim', '=', 200030704)->orWhere('email', "!=", "komang")->get();
-// Model::table('Mahasiswa')->insert([["nama" => "Maye", "nim" => 200030844, "email" => "maye3@gmail.com"]]);
-// Model::table('Mahasiswa')->insert([
+// $query = Model::table('product')->select('nama')->where('nama', '=', 'komang')->orWhere('nama', '=', "maye")->get();
+// $query = Model::table('product')->get();
+// $query = Model::table('product')->limit(3)->get();
+// $query = Model::table('product')->find(1);
+// $query = Model::table('product')->where('nama', '=', 'komang')->where('nim', '=', 200030704)->orWhere('email', "!=", "komang")->get();
+// $query = Model::table('product')->insert([["nama" => "Maye", "nim" => 200030844, "email" => "maye3@gmail.com"]]);
+// $query = Model::table('product')->insert([
 //     ["nama" => "Maye", "nim" => 200030849, "email" => "maye@gmail.com"],
 //     ["nama" => "Komang", "nim" => 200030704, "email" => "komang@gmail.com"],
 // ]);
-// Model::table('Mahasiswa')->where('nama', "like", "%ma%")->update(["nama" => "Komang Arya"]);
-// Model::table('Mahasiswa')->where('nama', "=", "Komang Arya")->delete();
+// $query = Model::table('product')->where('nama', "like", "%ma%")->update(["nama" => "Komang Arya"]);
+// $query = Model::table('product')->where('nama', "=", "Komang Arya")->delete();
+
+var_dump($query);
 ?>

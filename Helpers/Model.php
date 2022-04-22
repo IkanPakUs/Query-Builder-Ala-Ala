@@ -2,7 +2,7 @@
 
 class Model {
 
-    public static $table, $select_column, $where_clause = [], $conn, $dbname;
+    public static $table, $select_column, $where_clause = [], $limit, $conn, $dbname;
 
     public static function table($table) {
         self::$table = $table;
@@ -36,25 +36,27 @@ class Model {
         return new static();
     }
 
+    public static function limit($count) {
+        self::$limit = $count;
+
+        return new static();
+    }
+
+    public static function find($id) {
+        self::limit(1);
+        self::where('id', '=', $id);
+
+        $result = self::queryGet();
+
+        if ($result) {
+            $result = $result[0];
+        }
+
+        return $result;
+    }
+
     public static function get() {
-        $conn = self::$conn;
-        $table = self::$table;
-        $select_column = isset(self::$select_column) ? implode(", ", self::$select_column) : "*";
-        $where_clause = self::$where_clause;
-
-        self::queryValidator();
-
-        $sql = "SELECT " . $select_column . " FROM " . $table;
-
-        if (count($where_clause) > 0) {
-            $sql .= self::setupWhereClause();
-        }
-
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            return $result->fetch_all(MYSQLI_ASSOC);
-        }
+        return self::queryGet();
     }
 
     public static function insert($column_add) {
@@ -125,6 +127,34 @@ class Model {
         if ($conn->query($sql) !== TRUE) {
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
+    }
+
+    protected static function queryGet() {
+        $conn = self::$conn;
+        $table = self::$table;
+        $select_column = isset(self::$select_column) ? implode(", ", self::$select_column) : "*";
+        $where_clause = self::$where_clause;
+        $limit = self::$limit;
+
+        self::queryValidator();
+
+        $sql = "SELECT " . $select_column . " FROM " . $table;
+
+        if (count($where_clause) > 0) {
+            $sql .= self::setupWhereClause();
+        }
+
+        if (isset($limit)) {
+            $sql .= " LIMIT " . $limit;
+        }
+
+        $result = $conn->query($sql);
+
+        if ($result->num_rows > 0) {
+            return $result->fetch_all(MYSQLI_ASSOC);
+        }
+
+        return false;
     }
 
     protected static function setupWhereClause() {
